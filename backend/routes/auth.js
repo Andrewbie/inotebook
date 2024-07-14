@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const { query, validationResult, body } = require('express-validator');
+const {validationResult, body } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const fetchUser = require('../middleware/fetchuser')
@@ -10,7 +10,7 @@ const JWT_SECRET = 'shanudoinggreat'
 
 // ROUTE 1: creating a user using: POST "/api/auth/createuser" create user, no login
 router.post('/createuser',[
-    body('name','Enter a valid Name').isLength({ min: 3 }),
+    body('name','Enter a valid Name').isLength({ min: 3 }),                    
     body('email','Enter a valid email').isEmail(),
     body('password','Enter a valid Pasword').isLength({min:5})
 ] ,async(req,res)=>{
@@ -40,9 +40,9 @@ router.post('/createuser',[
           id:user.id
         }
       }
-
+      success = true
       const authToken = jwt.sign(data,JWT_SECRET)
-      res.json({authToken})
+      res.json({success,authToken})
     }
     catch(error){
       console.error(error.message)
@@ -65,12 +65,14 @@ router.post('/login',[
     try {
       let user = await User.findOne({email})
       if(!user){
-        return res.status(400).json({error:"Try to login with correct Credintials"})
+        success = false
+        return res.status(400).json({successs, error:"Try to login with correct Credintials"})
       }
 
       const passwordCompare = await bcrypt.compare(password,user.password)
       if(!passwordCompare){
-        return res.status(400).json({error:"Tru to login with correct credentials"})
+        success = false
+        return res.status(400).json({success, error:"Try to login with correct credentials"})
       }
 
       const data = {
@@ -78,9 +80,9 @@ router.post('/login',[
           id:user.id
         }
       }
-
+      success = true
       const authToken = jwt.sign(data,JWT_SECRET)
-      res.json({authToken})
+      res.json({success, authToken})
 
     } catch (error) {
       console.error(error.message)
